@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f3f5ef">
+    <title>Script-Fu Index | GIMP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Script-Fu Index home">
+        <img class="brand-mark" src="https://www.gimp.org/images/frontpage/wilber-big.png" alt="">
+        <span>Script-Fu <b>Index</b></span>
+      </a>
+      <p class="header-note">A field guide to GIMP's built-in procedures</p>
+      <nav class="header-links" aria-label="Project links">
+        <a href="https://www.gimp.org/">GIMP</a>
+        <a href="https://github.com/GNOME/gimp">Source repository <span aria-hidden="true">↗</span></a>
+        <a href="https://github.com/DoctorU/online-gimp-pdb-browser">Website code <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
+
+    <main class="workspace">
+      <aside class="library" aria-label="Procedure library">
+        <div class="library-heading">
+          <div>
+            <p class="eyebrow">THE CATALOG</p>
+            <h1>Script-Fu procedures</h1>
+          </div>
+          <span class="count" id="procedure-count">…</span>
+        </div>
+        <label class="search-launch">
+          <span class="search-icon" aria-hidden="true"></span>
+          <input id="search-input" type="search" placeholder="Name or description…" aria-label="Filter procedures by name or description" autocomplete="off">
+          <kbd>⌘ K</kbd>
+        </label>
+        <div class="list-caption"><span>PROCEDURES</span><span id="list-count"></span></div>
+        <div class="procedure-list" id="procedure-list" aria-label="Alphabetical procedure list">
+          <p class="loading">Loading the catalog…</p>
+        </div>
+      </aside>
+
+      <section class="detail" id="detail" aria-live="polite">
+        <div class="empty-state">
+          <span class="empty-mark" aria-hidden="true">S-F</span>
+          <p class="eyebrow">GIMP SCRIPT-FU</p>
+          <h2>Find the right<br>procedure.</h2>
+          <p>Browse the index or search by procedure name and description.</p>
+        </div>
+      </section>
+    </main>
+
+  </body>
+</html>

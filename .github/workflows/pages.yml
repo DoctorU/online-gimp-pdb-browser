@@ -1,0 +1,52 @@
+name: Build and deploy Script-Fu Index
+
+on:
+  push:
+    branches: [main]
+    tags: ["rebuild-pdb-*"]
+  workflow_dispatch:
+  schedule:
+    - cron: "23 6 * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out website
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Fetch GIMP source
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/GNOME/gimp.git "$RUNNER_TEMP/gimp"
+          git -C "$RUNNER_TEMP/gimp" sparse-checkout set plug-ins/script-fu/scripts app/pdb
+      - name: Generate the procedure catalog
+        run: python scripts/build_pdb.py --source-dir "$RUNNER_TEMP/gimp/plug-ins/script-fu/scripts" --pdb-c-dir "$RUNNER_TEMP/gimp/app/pdb" --revision "$(git -C "$RUNNER_TEMP/gimp" rev-parse HEAD)" --output data/pdb.json
+      - name: Assemble Pages site
+        run: |
+          mkdir -p _site/data
+          cp index.html app.js styles.css _site/
+          cp data/pdb.json _site/data/
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
