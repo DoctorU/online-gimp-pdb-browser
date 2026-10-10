@@ -26,6 +26,10 @@ source links point to the exact [GIMP](https://www.gimp.org/) commit used for th
 
 Enable GitHub Pages for the repository with **GitHub Actions** as its build and deployment source.
 
+## Developer documentation
+
+- [GIMP procedure registration survey](documentation/gimp-file-survey.md)
+
 ## License
 
 The project is licensed under the GNU General Public License, version 3 or (at your option) any later
