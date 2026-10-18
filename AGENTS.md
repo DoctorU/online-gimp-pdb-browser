@@ -72,3 +72,12 @@
   into `main`.
 - The current issue #3 branch, `feat/3-c-plugin-registration-poc`, is a child
   of the Phase 1 root branch.
+
+## GitHub CLI handoff
+
+- When a task requires a GitHub operation and the available `gh` CLI is not
+  authenticated for the agent, provide the exact non-interactive `gh`
+  command(s) as copyable code examples for the user to run in their terminal.
+- The user can execute those commands and share the output for follow-up.
+  Do not treat the agent's missing authentication as a reason to omit the
+  operation or to imply that the user cannot use `gh`.
