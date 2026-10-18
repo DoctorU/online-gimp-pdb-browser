@@ -36,3 +36,19 @@
   command and share `tmp/pdb-poc.json` for inspection.
 - Keep this spike separate from `scripts/build_pdb.py`; do not add a static C
   source scanner as a substitute for executing registration behavior.
+
+## Approved program document change control
+
+- Treat `documentation/plan/program.md` version 1.0 as the approved, generally
+  static statement of the project's goals and direction.
+- Do not change, reformat, or update that document unless the user explicitly
+  approves a specific change to it. The approval must clearly state both why
+  the change is needed and what content or scope should change. A general
+  request to work on the project or a phase plan is not approval to revise the
+  program document.
+- If the reason or requested change is unclear, ask the user to clarify before
+  editing the program document.
+- For every approved change, update the document's version and add a
+  `Version history` entry recording the version, date, change summary, and
+  reason. Do not infer approval or silently revise program goals while
+  implementing another task.

@@ -1,6 +1,27 @@
+---
+title: "Phase 1: C Procedure Extraction"
+document_type: phase-plan
+version: "0.1.0"
+status: approved
+created: 2026-10-18
+updated: 2026-10-18
+parent_plan: ./program.md
+---
+
 # Phase 1: C Procedure Extraction — Plan
 
-Status: scoped and approved by the project owner (developer + plugin authors audience). This plan is a Phase 1 blueprint to prototype, validate, and integrate C-registered procedures into the existing GIMP Procedure Browser site.
+Status: scoped plan for the initial program phase. The program-level goals and subsequent extensions are described in [program.md](./program.md).
+
+## Starting baseline
+
+The production site already has a static browser backed by a catalog of
+selected Script-Fu and native `app/pdb` C procedures. Native C entries are
+currently extracted by parsing source, not by capturing runtime registration.
+Built-in C plug-in and Python plug-in registrations are not currently
+extracted. Phase 1 extends this existing site rather than creating the
+browser from scratch, and must distinguish existing source-based native-C
+coverage from the proposed registration-capture approach. See
+[Phase 0](./phase0.md) for the as-built baseline.
 
 Goals
 
@@ -8,10 +29,11 @@ Goals
 - Produce a repeatable extraction script that emits a versioned JSON catalog for a specific GIMP stable revision.
 - Validate the extractor in CI (Ubuntu) and integrate the resulting catalog into the website only after validation passes.
 - Produce a coverage report and document known limitations.
+- Deliver the Phase 1 catalog through the online browser so users can consult C procedure entries without installing or running GIMP locally.
 
 Scope
 
-- In-scope: Native `app/pdb` C procedures and built-in C plug-in procedures as observed in a standard Ubuntu CI/runtime environment. The extractor should capture all safely observable registration metadata.
+- In-scope: Native `app/pdb` C procedures and built-in C plug-in procedures exposed in a standard Ubuntu CI/runtime environment. The extractor should capture all safely observable registration metadata.
 - Out-of-scope: Third-party plug-ins, environment-conditional procedures not present in the standard CI runtime, and historical catalogs (the site will publish only the current stable revision).
 
 Deliverables
@@ -22,6 +44,8 @@ Deliverables
 4. CI job(s) that run on ubuntu-latest, check the upstream stable revision daily, and: if changed, run extraction, validate output, and publish the site only on success.
 5. Integration work in the static site to display extracted C-procedure fields (parameters, return values, menu paths, file-format metadata, and source links where available).
 6. A coverage report and a documented list of limitations and environment-dependent gaps.
+
+The local GIMP build or runtime mentioned in the experiments is a development or validation tool only. It must not be a prerequisite for visitors to browse the deployed catalog.
 
 Approach and experiments
 
@@ -47,11 +71,16 @@ Validation and acceptance
 Create a validation checklist and automated checks that must pass before replacing the live catalog:
 
 - JSON schema validation (required fields, types)
-- Basic coverage checks: presence of a set of known, high-confidence procedures (e.g., a shortlist of common native and plug-in procedures expected in that stable revision)
+- A documented, measurable coverage check for both in-scope C families against an agreed completeness baseline for the standard Ubuntu environment
 - No unexpected empty records or malformed parameter lists
 - Source link and provenance metadata present (GIMP revision used)
+- A deployed browser reference where visitors can read the published C-procedure catalog without GIMP installed or running on their computer
 
-If validation fails, the CI run must fail and the site must keep the previous live catalog.
+Representative examples prove the prototype approach only; they do not satisfy
+the production coverage gate. The baseline and coverage threshold must be
+defined before the first C catalog is deployed. If the extractor cannot meet
+that gate, or validation fails, the CI run must fail and the site must keep
+the previous live catalog.
 
 Integration
 
@@ -86,13 +115,13 @@ Timeline and milestones (tentative)
 
 - Week 1: Prototype libgimp stub and collector for one built-in plug-in (E1). Produce first JSON sample and coverage notes.
 - Week 2: Prototype native `app/pdb` capture (E2) and capture a representative native procedure. Produce combined sample and a short comparison report.
-- Week 3: Define JSON schema, write validation checks, and adapt the website schema/UI to render new fields (preview only).
-- Week 4: Add CI job that runs extraction, validates output, and produces a preview artifact. If everything passes and coverage is deemed acceptable, complete website integration and deploy.
+- Week 3: Define JSON schema, write validation checks, and adapt the website schema/UI to render new fields. Keep prototype output out of the live catalog.
+- Week 4: Add the stable-version CI workflow, run extraction and validation, and deploy the integrated catalog only after the agreed coverage and validation checks pass. If the checks fail, keep the last known-good site.
 
 Notes for future phases
 
-- Phase 2: Expand extractors to Python and Script-Fu built-ins, add support for third-party plug-ins, and consider historical catalogs.
-- Phase 3: Improve UI, search, and cross-linking to source code, and implement richer provenance queries.
+- Phase 2: Expand extraction coverage to built-in Python and Script-Fu procedures.
+- Further extensions, such as third-party plug-in support, historical catalogs, and broader UI improvements, are possibilities described in [program.md](./program.md), not Phase 1 commitments.
 
 Appendix: Useful references in this repository
 
