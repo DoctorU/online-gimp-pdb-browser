@@ -1,8 +1,8 @@
 ---
 title: "Issue 3: C Plug-in Registration POC"
 document_type: investigation-plan
-version: "0.1.0"
-status: draft
+version: "0.3.0"
+status: approved for poc
 created: 2026-10-18
 updated: 2026-10-18
 issue: https://github.com/DoctorU/online-gimp-pdb-browser/issues/3
@@ -11,131 +11,156 @@ parent_plan: ../documentation/plan/phase1.md
 
 # Issue 3: C Plug-in Registration POC
 
-> **Status: Draft.** This is a bounded feasibility experiment under Phase 1,
-> which remains in development. The POC does not implement the production
-> catalog extractor or authorize publishing sample records as complete
-> coverage.
+> **Status: Approved for POC.** This is a bounded feasibility experiment
+> under Phase 1, which remains in development. The POC does not implement the
+> production catalog extractor or authorize publishing sample records as
+> complete coverage.
 
 ## Purpose
 
-Determine whether GIMP's built-in C plug-ins can be compiled and run in a
-reduced collector environment that captures their registered procedure
-metadata without requiring a normal, fully functioning GIMP installation.
-Use `plug-ins/help/help.c` and `plug-ins/common/file-png.c` as contrasting
-examples.
+Determine whether the actual GIMP 3 built-in C plug-in procedure-construction
+path can be exercised by a collector, and whether this can be done without
+GIMP's normal plug-in host/runtime. Use `plug-ins/help/help.c` and
+`plug-ins/common/file-png.c` as contrasting examples. Feasibility is an
+explicit investigation result, not an assumption or a prerequisite already
+settled by the plan.
 
 The result must distinguish:
 
 1. Procedure names and metadata declared by source.
 2. Procedures observed after GIMP's normal plug-in host loads them into a
    live PDB.
-3. Procedure registrations observed directly by a collector while exercising
-   the plug-in registration path.
+3. Procedure metadata returned by a harness that exercises the plug-in's
+   actual `query_procedures()` and `create_procedure()` callbacks.
+4. Procedures observed after GIMP's normal plug-in host registers the
+   plug-in-created procedures in the live PDB.
 
-Only the third result demonstrates the proposed registration-capture
-approach. A successful live-PDB export is a useful baseline, not proof that a
-reduced collector works.
+Callback output demonstrates that the plug-in code created the metadata; it
+does not by itself demonstrate registration with GIMP's PDB. Only live-host
+observation demonstrates the latter. Keep both evidence types distinct.
 
 ## Experiment outline
 
 ### 1. Pin and isolate the GIMP source
 
-1. Identify the stable GIMP 3 release and exact source revision relevant to
-   the Phase 1 catalog. Record the tag, commit, and source URL in the POC
-   results so subsequent comparisons use the same code.
-2. Clone the official GIMP repository into the ignored `tmp/` directory, not
-   into the application source tree. For example:
+1. Select a stable GIMP 3 release relevant to Phase 1 and record its tag and
+   resolved commit SHA. The upstream source is an input to this POC; no
+   changes will be pushed to the GIMP repository.
+2. Clone GNOME's read-only GitHub mirror,
+   [`GNOME/gimp`](https://github.com/GNOME/gimp), at the selected release tag
+   into ignored `tmp/`. Pinning and recording the resolved commit makes the
+   investigation reproducible; write access to the upstream repository is
+   not needed.
 
    ```sh
-   git clone --filter=blob:none --no-checkout \
-     https://gitlab.gnome.org/GNOME/gimp.git tmp/gimp-src
-   git -C tmp/gimp-src fetch --depth 1 origin <release-tag-or-commit>
-   git -C tmp/gimp-src checkout --detach FETCH_HEAD
+   GIMP_REF='<verified-release-tag>'
+   git clone --depth 1 --branch "$GIMP_REF" \
+     https://github.com/GNOME/gimp.git tmp/gimp-src
    git -C tmp/gimp-src rev-parse HEAD
    ```
 
-   Use the verified release tag or commit in place of the placeholder. If the
-   upstream server does not support the partial-clone option, retry with a
-   normal clone. Keep all generated build and install output under `tmp/`.
-3. Inspect the two plug-ins' build definitions and registration entry points.
-   Map which plug-in API calls create procedures and set their metadata, and
-   what host/runtime calls occur before those procedures can be enumerated.
-   Treat `app/pdb` native procedure registration as a separate family, not as
-   the implementation of these plug-ins.
+   Replace the placeholder with the selected release tag. Keep all generated
+   build and install output under `tmp/`.
+3. Before compiling, inspect the pinned revision's `GimpPlugIn` lifecycle,
+   both examples' `query_procedures()` and `create_procedure()` callbacks,
+   their Meson target definitions, and the plug-in host's query/registration
+   protocol. Map the APIs used to construct each procedure and identify which
+   require a live GIMP host, UI, or external libraries. `app/pdb`'s native
+   registration path is a different subsystem and is not a proxy for the
+   plug-in path.
+4. Write a short feasibility assessment from this source trace: what can be
+   invoked directly, what requires the host/protocol, what can be stubbed
+   without changing procedure construction, and what remains uncertain.
+   Choose the first example based on the traced build/runtime dependencies;
+   do not assume `help.c` is simpler.
 
-### 2. Establish a real GIMP build and runtime baseline
+This source-level investigation is part of the POC: the current inspection of
+upstream `master` is useful orientation, but it does not establish feasibility
+for the pinned stable release.
 
-1. Install the build dependencies documented by the pinned GIMP revision.
-   Record the host OS, compiler, Meson/Ninja versions, and relevant configure
-   options. Do not introduce a custom CI container.
-2. Configure a normal source build with a private install prefix under
-   `tmp/`, then build and install it. For example:
+### 2. Establish the runtime baseline and decide whether a source build is needed
+
+After the source review, check whether an already available GIMP 3 runtime
+(including the user's Flatpak installation) can supply the live-PDB comparison
+for the selected examples. Record its GIMP version, available plug-ins, and
+capture method. This result is a runtime baseline, not evidence of reduced
+collection.
+
+Build GIMP from source only if the available runtime cannot answer the
+question, or a runtime matching the pinned source revision is needed. Meson
+is the build system, not a special Linux image: a future GitHub Actions job
+could use a GitHub-hosted Ubuntu runner, install the pinned revision's
+documented build dependencies and Meson/Ninja, then configure and build. Do
+not create a custom container image for this POC. Establish the dependency set
+and build cost locally before proposing CI.
+
+For a source build, record the host OS, compiler, Meson/Ninja versions, and
+options. Check the pinned `meson_options.txt` and dependency report before
+building. `enable-console-bin=true` produces a console-only executable, but
+does not remove GIMP's runtime or plug-in host. Keep the build directory and
+private install prefix under ignored `tmp/`. For example:
 
    ```sh
    meson setup "$PWD/tmp/gimp-build" "$PWD/tmp/gimp-src" \
-     --prefix="$PWD/tmp/gimp-install"
+     --prefix="$PWD/tmp/gimp-install" \
+     -Denable-console-bin=true
+   meson configure "$PWD/tmp/gimp-build"
+   ```
+
+Run compile and install only if the configured build is needed and its
+dependency report is acceptable:
+
+   ```sh
    meson compile -C "$PWD/tmp/gimp-build"
    meson install -C "$PWD/tmp/gimp-build"
    ```
 
-   Keep the build directory and install prefix separate from the checked-out
-   source. If dependencies are unavailable, record the configure failure and
-   address only the prerequisites documented for this build.
-3. Run the two plug-ins through the GIMP-provided headless/console runtime.
-   Use the existing live-PDB capture POC as a control and record which target
-   procedures appear, the metadata exposed, and any optional-dependency or
-   plug-in-loading failures. First verify that the private install's console
-   executable starts with its required runtime environment; then invoke the
-   existing POC with `GIMP` pointing to that executable. A configured-out or
-   unloadable example is recorded as unavailable in this baseline, not
-   misreported as a successful capture.
-4. Compare the result with each source's registration code. Label source
-   declarations and live-PDB observations as such; do not describe either as
-   collector-captured registrations.
+If dependencies are unavailable or build cost is unreasonable, record the
+exact blocker rather than silently downgrading the required evidence. A
+configured-out or unloadable example is unavailable for the runtime baseline,
+not a successful capture and not evidence that its source has no registration.
 
-This step intentionally builds a known-good reference first. It answers
-whether the examples compile and run at the selected revision and supplies
-expected metadata against which the reduced experiment can be checked.
+### 3. Test the narrowest viable collection boundary
 
-### 3. Test whether the registration path can be reduced
+Use the source assessment to pick one example and begin at the narrowest
+boundary that retains the real procedure-construction callbacks. Do not begin
+by replacing a large part of GIMP or assuming that substituting `libgimp` is
+sufficient.
 
-Start with the smaller `help.c` example. Do not begin by replacing a large
-part of GIMP or assuming that substituting `libgimp` is sufficient.
+1. First test whether the compiled plug-in can be run in its normal query mode
+   or whether its actual callback path can be invoked with GIMP's real
+   `GimpProcedure` types outside the host. Record exactly which lifecycle
+   callbacks ran.
+2. Serialize procedure objects returned from the real `create_procedure()`
+   callback. A harness that invokes this callback captures plug-in-produced
+   metadata; it must not claim that the procedure was registered with the
+   main GIMP PDB unless the host's registration step also ran.
+3. If direct invocation is not viable, inspect and test the actual plug-in
+   protocol boundary. Consider a small host-side observer or running the
+   normal GIMP host. Any stub, wrapper, or interposition must preserve the
+   callback and procedure-construction behavior, and its limits must be
+   recorded.
+4. Only after one example works, repeat the approach with the other example.
+   Verify build dependencies (including optional ones) rather than assuming
+   either plug-in is simpler.
+5. Do not use `gimp_pdb_register_procedure()` interception as evidence for
+   these plug-ins unless the pinned source trace proves that it is on their
+   registration path. Do not use source-text parsing as a substitute for
+   executing the procedure-construction code.
 
-1. Follow the actual GIMP 3 plug-in lifecycle for the selected example:
-   process startup, host negotiation, procedure discovery/creation, and
-   transfer or registration of procedure metadata.
-2. Identify the narrowest boundary at which real procedure metadata can be
-   observed. Prefer reusing GIMP's real procedure and parameter types where
-   practical, with a small collector at the host/registration boundary.
-3. Build a reduced executable or shim around the actual plug-in registration
-   code. Stub only the runtime services proven unnecessary by the dependency
-   trace. Avoid mocking broad GIMP APIs before establishing which calls the
-   plug-in actually requires.
-4. Execute the plug-in registration path and serialize the resulting
-   procedure metadata. Record every mocked or replaced API and any metadata
-   that could not be preserved.
-5. Only if the first example works, repeat with `file-png.c`. This is the
-   harder case because its registration path and dependencies may include
-   file-procedure and format-specific metadata or optional build
-   dependencies.
-6. If a proposed wrapper/interposition strategy is considered, demonstrate
-   that it observes the real registration path for both examples. Do not
-   assume dynamic symbol wrapping or replacement of `libgimp` works without
-   testing; distinguish a link-time shim from the normal GIMP host.
-
-If producing the reduced executable requires effectively rebuilding or
+If producing a reduced executable requires effectively rebuilding or
 mocking most of GIMP's host/runtime, stop and document that finding instead of
 expanding the mock without a bounded rationale. Compare its cost and fidelity
-with running the normal headless GIMP build.
+with using the normal headless GIMP host.
 
-### 4. Validate the captured output
+### 4. Validate captured output
 
 - Capture procedure name, procedure type, label/title, description/help,
   attribution, menu paths, arguments, return values, and file metadata where
   available.
-- Check that the collector's output agrees with the real runtime baseline
-  for the same source revision and plug-in configuration.
+- Compare callback-harness and live-host output for the same source revision
+  and plug-in configuration. Account for metadata normalized or supplied by
+  the host and control locale where practical.
 - Preserve provenance for source revision, build options, example plug-in,
   and capture method.
 - Add focused tests for serialization and a repeatable smoke command that
@@ -148,15 +173,16 @@ with running the normal headless GIMP build.
 
 ## Decision gates
 
-Proceed from the real-runtime baseline to the reduced collector only after
-recording the actual plug-in lifecycle and required APIs. Proceed from
-`help.c` to `file-png.c` only when the first example yields registrations
-through the reduced path and its output can be validated.
+Proceed to a build or reduced harness only after the pinned-source assessment
+explains why it is needed and identifies the boundary to test. Proceed to the
+second example only when the first demonstrates a repeatable, correctly
+labelled capture.
 
 At the end, report one of these conclusions with evidence:
 
-- **Feasible:** both examples execute their registration path in the reduced
-  collector, produce the required metadata, and pass the repeatable check.
+- **Feasible:** both examples' actual procedure-construction callbacks run
+  in the proposed collector, produce the required metadata, and pass the
+  repeatable check; any claim of host registration is separately validated.
 - **Feasible with limits:** identify the precise unsupported patterns,
   dependencies, and missing metadata, and explain why those limits do not
   invalidate the POC.
@@ -170,13 +196,15 @@ proof that the collector executed it.
 
 ## Deliverables
 
-1. A pinned source revision and reproducible build/run instructions.
-2. A real-runtime baseline for `help.c` and `file-png.c`.
-3. A reduced collector prototype if the dependency investigation supports one.
+1. A pinned source revision and source-level lifecycle/build feasibility
+   assessment.
+2. A runtime baseline for `help.c` and `file-png.c`, using an available GIMP
+   runtime or a documented source build when necessary.
+3. A reduced collector prototype if the assessment supports one.
 4. Example JSON output labelled with its evidence/capture method.
 5. Focused validation and a repeatable smoke check.
 6. A short findings summary documenting prerequisites, unsupported cases,
-   feasibility decision, and implications for Phase 1.
+   build/CI implications, feasibility decision, and implications for Phase 1.
 
 ## Out of scope
 
@@ -184,7 +212,8 @@ proof that the collector executed it.
 - Integrating the POC into `scripts/build_pdb.py` or the production catalog.
 - Publishing the POC's example output as complete coverage.
 - Designing the final catalog schema or browser experience.
-- Building a bespoke container image or production CI workflow.
+- Implementing a production CI workflow. The POC may estimate feasibility on
+  a GitHub-hosted Ubuntu runner but does not need a custom container image.
 
 ## Related references
 
@@ -192,3 +221,10 @@ proof that the collector executed it.
 - [Phase 1 outcome baseline](../documentation/plan/phase1.md)
 - [Live PDB metadata-export POC](../documentation/procedure-extraction-poc.md)
 - [Project work tracker](../TODO.md)
+
+## Plan history
+
+| Version | Date       | Summary | Reason |
+|---------|------------|---------|--------|
+| 0.2.0   | 2026-10-18 | Added a pinned-source feasibility gate, distinguished plug-in callback metadata from host registration, made source builds conditional, and documented the GitHub mirror and future Ubuntu-runner option | Address the GIMP lifecycle and build-model uncertainties before starting an expensive build or collector implementation. |
+| 0.3.0   | 2026-10-18 | Approved the plan for the full POC and clarified that source review is the first step, not the limit of the work | Authorize the bounded investigation and capture experiment while keeping source builds conditional on need. |

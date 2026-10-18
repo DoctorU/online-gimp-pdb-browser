@@ -1,7 +1,7 @@
 ---
 title: "Project Work Scratchpad"
 document_type: work-tracker
-version: "0.4.0"
+version: "0.5.0"
 status: active
 created: 2026-10-18
 updated: 2026-10-18
@@ -38,7 +38,7 @@ Outcome baseline: [Phase 1 plan](documentation/plan/phase1.md).
 |-------|--------|-----------------------|
 | [#1: Add additional missing PDB procedures](https://github.com/DoctorU/online-gimp-pdb-browser/issues/1) | Open | Phase 1 parent and user-facing scope. Updated to reflect the production catalog and intended outcome. |
 | [#2: Survey GIMP procedure registration patterns](https://github.com/DoctorU/online-gimp-pdb-browser/issues/2) | Complete | Surveyed registration families and extraction gaps. |
-| [#3: POC — extract plug-in C procedures](https://github.com/DoctorU/online-gimp-pdb-browser/issues/3) | Open; active | Feasibility POC using `help.c` and `file-png.c`; see the [Issue 3 execution plan](plans/phase3_1.md). Samples are not production coverage. |
+| [#3: POC — extract plug-in C procedures](https://github.com/DoctorU/online-gimp-pdb-browser/issues/3) | Open; active | POC plan approved; see the [Issue 3 execution plan](plans/phase3_1.md). Next session: begin by pinning the GIMP release and reviewing the selected source revision's plug-in lifecycle/build definitions, then continue through the plan's runtime and collector experiments. Samples are not production coverage. |
 | [#4: Modularize the catalog builder](https://github.com/DoctorU/online-gimp-pdb-browser/issues/4) | Open | Preserve existing CLI/output behavior while separating shared code and source-family extractors. |
 | [#5: Design procedure browser navigation](https://github.com/DoctorU/online-gimp-pdb-browser/issues/5) | Open | Decide how users browse by procedure, plug-in, and menu location; retain search and detail lookup. |
 | [#8: Validate native PDB coverage and choose its extraction path](https://github.com/DoctorU/online-gimp-pdb-browser/issues/8) | Open | Compare native source-based output with an independent reference and decide whether the current extraction path is adequate. |
@@ -63,6 +63,7 @@ No new issue drafts are currently pending creation for Phase 1.
 |---------|------------|---------|--------|
 | 0.3.0   | 2026-10-18 | Recorded created issues #8–#12 and the Phase 1 sequence | Replace proposed work with the user's confirmed issue links. |
 | 0.4.0   | 2026-10-18 | Linked issue #3 to its bounded execution plan | Make the active POC steps and decision gates easy to find. |
+| 0.5.0   | 2026-10-18 | Marked the issue #3 POC plan approved and noted the next-session starting point | Resume the approved investigation from source pinning and lifecycle review. |
 
 ## Future phases and general backlog
 
