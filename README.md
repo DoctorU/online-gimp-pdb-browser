@@ -55,6 +55,10 @@ Then open <http://localhost:8000>. This existing source-based builder is
 separate from the registration-collector experiments proposed for Phase 1;
 the proposed collector and its CI workflow are not yet implemented.
 
+## Developer documentation
+
+- [GIMP procedure registration survey](documentation/gimp-file-survey.md)
+
 ## License
 
 The project is licensed under GPL-3.0-or-later. See [LICENSE](LICENSE).
