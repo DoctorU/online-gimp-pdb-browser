@@ -1,132 +1,121 @@
 ---
-title: "Phase 1: C Procedure Extraction"
-document_type: phase-plan
-version: "0.1.0"
-status: approved
+title: "Phase 1: Built-in C Procedure Coverage"
+document_type: phase-baseline
+version: "0.4.0"
+status: in development
 created: 2026-10-18
 updated: 2026-10-18
 parent_plan: ./program.md
+work_tracker: ../../TODO.md
 ---
 
-# Phase 1: C Procedure Extraction — Plan
+# Phase 1: Built-in C Procedure Coverage
 
-Status: scoped plan for the initial program phase. The program-level goals and subsequent extensions are described in [program.md](./program.md).
+> **Status: In development.** This is the current reference for Phase 1, and
+> will be kept accurate as POCs, evidence, and implementation evolve. Phase 1
+> is not complete until the completion criteria below are met.
 
-## Starting baseline
+## Outcome
 
-The production site already has a static browser backed by a catalog of
-selected Script-Fu and native `app/pdb` C procedures. Native C entries are
-currently extracted by parsing source, not by capturing runtime registration.
-Built-in C plug-in and Python plug-in registrations are not currently
-extracted. Phase 1 extends this existing site rather than creating the
-browser from scratch, and must distinguish existing source-based native-C
-coverage from the proposed registration-capture approach. See
-[Phase 0](./phase0.md) for the as-built baseline.
+Phase 1 establishes the online browser as a dependable reference for the
+built-in C procedures available in the standard Linux GIMP 3 environment.
+The catalog contains both native `app/pdb` procedures and procedures
+registered by built-in C plug-ins, alongside the existing Script-Fu entries.
 
-Goals
+GIMP developers and plug-in authors can find a procedure and understand its
+purpose, inputs, outputs, and other available registration metadata from a
+browser without installing or running GIMP locally.
 
-- Prototype a collector that captures procedure registration metadata for both native `app/pdb` procedures and built-in C plug-ins.
-- Produce a repeatable extraction script that emits a versioned JSON catalog for a specific GIMP stable revision.
-- Validate the extractor in CI (Ubuntu) and integrate the resulting catalog into the website only after validation passes.
-- Produce a coverage report and document known limitations.
-- Deliver the Phase 1 catalog through the online browser so users can consult C procedure entries without installing or running GIMP locally.
+## User-facing baseline
 
-Scope
+The Phase 1 catalog:
 
-- In-scope: Native `app/pdb` C procedures and built-in C plug-in procedures exposed in a standard Ubuntu CI/runtime environment. The extractor should capture all safely observable registration metadata.
-- Out-of-scope: Third-party plug-ins, environment-conditional procedures not present in the standard CI runtime, and historical catalogs (the site will publish only the current stable revision).
+- Covers the agreed native C and built-in C plug-in procedure families, as
+  exposed by the documented standard Linux environment.
+- Preserves the existing Script-Fu catalog and native `gimp-*` records.
+- Presents procedure identity, descriptions, arguments, return values, menu
+  locations, attribution, file-format properties, and source links where
+  those fields are available.
+- Identifies the GIMP release and exact source revision represented.
+- Makes the catalog's coverage boundary and known omissions clear.
+- Is generated and published through a repeatable process; an invalid or
+  incomplete update does not replace the last known-good publication.
 
-Deliverables
+## Scope
 
-1. Documented local development and build instructions for the prototype collector (Ubuntu-focused).
-2. A repeatable extraction command or script that produces a versioned JSON catalog (including the GIMP revision used).
-3. A JSON schema and validation checks for the produced catalog.
-4. CI job(s) that run on ubuntu-latest, check the upstream stable revision daily, and: if changed, run extraction, validate output, and publish the site only on success.
-5. Integration work in the static site to display extracted C-procedure fields (parameters, return values, menu paths, file-format metadata, and source links where available).
-6. A coverage report and a documented list of limitations and environment-dependent gaps.
+Included:
 
-The local GIMP build or runtime mentioned in the experiments is a development or validation tool only. It must not be a prerequisite for visitors to browse the deployed catalog.
+- Native C procedures registered in GIMP's `app/pdb`.
+- Built-in C plug-in procedures.
+- The existing built-in Script-Fu catalog.
+- Browser presentation, metadata normalization, provenance, validation, and
+  publication needed to make the combined catalog useful and trustworthy.
 
-Approach and experiments
+Not included:
 
-This phase emphasizes prototyping to test the central hypothesis: a lightweight stub/collector can capture C registration calls sufficiently to build the catalog without needing a full GIMP runtime in CI.
+- Third-party plug-ins installed by individual users.
+- Procedures unavailable in the standard Linux environment because of
+  optional dependencies, unless explicitly included in a documented coverage
+  extension.
+- Python plug-in extraction, which is a later program phase.
+- Historical catalog browsing; the reference represents the latest stable
+  GIMP 3 release.
 
-Planned experiments
+## Coverage and trust
 
-- E1: libgimp stub for built-in C plug-ins
-  - Create a minimal libgimp implementation exposing the subset of APIs that C plug-ins call during registration (gimp_procedure_new and friends, gimp_procedure_set_menu_label, gimp_procedure_add_menu_path, gimp_procedure_add_argument, gimp_procedure_add_return_value, etc.).
-  - Compile one or two representative plug-ins against the stub and run them in a collector harness that records registration calls into JSON.
-  - Evaluate how many plug-ins register successfully and whether the recorded metadata matches expectations.
+Catalog entries may be produced by different extraction methods. The
+published result distinguishes procedure families and records provenance;
+source parsing, live-PDB observation, and registration-call capture are not
+treated as equivalent evidence.
 
-- E2: native `app/pdb` registration capture
-  - Prototype a lightweight harness that can link and run code that would call the native registration APIs (for example, by compiling a collector binary against the same interfaces used in app/pdb files or by adapting native app/pdb compilation units into a collector harness).
-  - Capture at least one representative native PDB procedure and evaluate the completeness of metadata.
+The capture approach and metadata contract are implementation details tracked
+in the work tracker and related issues. This plan is updated when POCs or
+findings change what is known about the outcome, scope, coverage, or
+limitations. Regardless of method, Phase 1 coverage is not considered complete
+based on representative examples alone: publication requires an agreed,
+measurable baseline and passing validation for both in-scope C families.
+Conditional registrations and unsupported patterns are reported rather than
+silently presented as covered.
 
-- E3: Compare to live GIMP (optional feasibility test)
-  - Locally (or in CI only if feasible), build a normal GIMP runtime for a chosen stable revision and run the existing live-PDB POC (scripts/capture_pdb_poc.py) to produce a reference JSON.
-  - Compare the lightweight collector output against the full-GIMP output for a small representative set to measure coverage and fidelity.
+Scope may be refined while Phase 1 is in development. Newly agreed Phase 1
+requirements are recorded here. Any functionality explicitly deferred from
+Phase 1 is recorded in a separate `documentation/plan/phase2.md` with status
+`draft`, along with an explicit note that Phase 1 remains in development. A
+Phase 2 draft does not change Phase 1's status or completion criteria.
 
-Validation and acceptance
+## Phase 1 completion criteria
 
-Create a validation checklist and automated checks that must pass before replacing the live catalog:
+Phase 1 is complete when:
 
-- JSON schema validation (required fields, types)
-- A documented, measurable coverage check for both in-scope C families against an agreed completeness baseline for the standard Ubuntu environment
-- No unexpected empty records or malformed parameter lists
-- Source link and provenance metadata present (GIMP revision used)
-- A deployed browser reference where visitors can read the published C-procedure catalog without GIMP installed or running on their computer
+1. The latest stable GIMP 3 catalog includes the agreed, validated coverage
+   for native `app/pdb` C and built-in C plug-in procedures, while preserving
+   existing Script-Fu entries.
+2. Users can search and browse these records online without running GIMP.
+3. Records link to the correct GIMP source revision and expose available
+   metadata in a consistent way.
+4. A repeatable automated pipeline checks provenance, catalog structure, and
+   the agreed coverage threshold before publication.
+5. Failed validation leaves the last known-good site in place.
+6. The setup, coverage boundary, limitations, and update process are
+   documented.
 
-Representative examples prove the prototype approach only; they do not satisfy
-the production coverage gate. The baseline and coverage threshold must be
-defined before the first C catalog is deployed. If the extractor cannot meet
-that gate, or validation fails, the CI run must fail and the site must keep
-the previous live catalog.
+## Related work
 
-Integration
+Execution status and remaining tasks are maintained in the
+[Phase 1 work tracker](../../TODO.md), not in this outcome baseline. The current
+issue map is:
 
-- Update the data schema used by the static site to accept the full set of collected C fields. Maintain backward compatibility for existing Script-Fu entries.
-- UI adjustments: present additional sections for arguments/return-values and file-format metadata. Ensure graceful handling when fields are absent.
+- [Parent issue #1: Add additional missing PDB procedures](https://github.com/DoctorU/online-gimp-pdb-browser/issues/1)
+- [Issue #2: Survey GIMP procedure registration patterns (completed)](https://github.com/DoctorU/online-gimp-pdb-browser/issues/2)
+- [Issue #3: POC — extract plug-in C procedures](https://github.com/DoctorU/online-gimp-pdb-browser/issues/3)
+- [Issue #4: Modularize the catalog builder](https://github.com/DoctorU/online-gimp-pdb-browser/issues/4)
+- [Issue #5: Design procedure browser navigation](https://github.com/DoctorU/online-gimp-pdb-browser/issues/5)
 
-CI and publishing
+## Version history
 
-- A daily job checks the GIMP stable channel for a new revision. Only when the stable revision changes will the CI attempt a full extraction run.
-- The CI job runs on `ubuntu-latest` and performs:
-  1. Checkout the repository
-  2. Fetch the GIMP stable source for the revision under test
-  3. Run the prototype collector(s) (stub-based) and produce data/pdb.json
-  4. Validate the output with JSON schema and coverage checks
-  5. If validation passes, build the static site and deploy to GitHub Pages (replacing the live catalog)
-  6. If validation fails, fail the job and leave the live site unchanged
-
-Note: If prototype evidence shows the stub approach cannot reach sufficient coverage, CI may optionally build a full GIMP runtime on ubuntu-latest for validation. This is a cost/complexity decision to be made after the prototype experiments.
-
-Risks and mitigations
-
-- Risk: A single stub cannot capture both registration families.
-  - Mitigation: Prototype one representative example from each family. If separate collectors are required, normalize outputs into a single catalog during integration.
-
-- Risk: Environment-dependent registrations (external deps) will be missing from the CI catalog.
-  - Mitigation: Document these as limitations in the coverage report and treat CI output as the canonical set for the standard runtime.
-
-- Risk: CI build of full GIMP is time-consuming or fragile.
-  - Mitigation: Use local builds for deep validation and keep CI limited to stub-based extraction unless the prototype shows otherwise.
-
-Timeline and milestones (tentative)
-
-- Week 1: Prototype libgimp stub and collector for one built-in plug-in (E1). Produce first JSON sample and coverage notes.
-- Week 2: Prototype native `app/pdb` capture (E2) and capture a representative native procedure. Produce combined sample and a short comparison report.
-- Week 3: Define JSON schema, write validation checks, and adapt the website schema/UI to render new fields. Keep prototype output out of the live catalog.
-- Week 4: Add the stable-version CI workflow, run extraction and validation, and deploy the integrated catalog only after the agreed coverage and validation checks pass. If the checks fail, keep the last known-good site.
-
-Notes for future phases
-
-- Phase 2: Expand extraction coverage to built-in Python and Script-Fu procedures.
-- Further extensions, such as third-party plug-in support, historical catalogs, and broader UI improvements, are possibilities described in [program.md](./program.md), not Phase 1 commitments.
-
-Appendix: Useful references in this repository
-
-- scripts/capture_pdb_poc.py — a proof-of-concept that queries a running GIMP's PDB using the Python batch interpreter.
-- scripts/build_pdb.py — the existing Script-Fu and native C (app/pdb) source tokenizer and Script-Fu indexer.
-- documentation/gimp-file-survey.md — survey of how procedures are registered across Script-Fu, Python, plug-in C, and native app/pdb files.
-
-End of Phase 1 plan.
+| Version | Date       | Status | Summary | Reason |
+|---------|------------|--------|---------|--------|
+| 0.1.0   | 2026-10-18 | Approved | Initial Phase 1 scope | Define C extraction and browser integration goals. |
+| 0.2.0   | 2026-10-18 | Review | Added remaining-work sequence and issue alignment | Translate the scope into sequenced execution work. |
+| 0.3.0   | 2026-10-18 | Review | Reframed as completed-state user baseline; moved execution tracking to `TODO.md` | Keep the phase reference outcome-focused and separate it from task status. |
+| 0.4.0   | 2026-10-18 | In development | Marked as a living reference while POCs and findings evolve; defined how deferred scope moves to a Phase 2 draft | Keep the plan accurate during implementation and make clear that Phase 1 remains active. |

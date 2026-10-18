@@ -2,7 +2,7 @@
 
 ## Procedure extraction investigation
 
-- The active feature is issue #3, on branch `feat/1-add-missing-pdb-procedures`.
+- The active feature is issue #3, on branch `feat/3-c-plugin-registration-poc`.
 - The intended longer-term goal is to extract C plug-in procedure metadata by
   compiling the plug-ins and capturing their registration behavior, ideally
   with a lightweight collector rather than parsing C source. It is not yet
@@ -52,3 +52,23 @@
   `Version history` entry recording the version, date, change summary, and
   reason. Do not infer approval or silently revise program goals while
   implementing another task.
+
+## Phase and progress documentation
+
+- Follow the project-local [contributing progress guide](CONTRIBUTING-PROGRESS.md)
+  when updating phase plans or recording scope changes.
+- Phase 1 remains `in development` until its completion criteria are met.
+  Keep its plan accurate as POCs and findings evolve; do not treat a draft
+  Phase 2 plan as evidence that Phase 1 is complete.
+
+## Phase 1 branch workflow
+
+- `feat/1-add-missing-pdb-procedures` is the Phase 1 root/integration branch,
+  based on `main`. Create each Phase 1 issue or feature branch from this root
+  branch, rather than branching from `main` or stacking one Phase 1 feature
+  branch on another.
+- Target Phase 1 work pull requests at `feat/1-add-missing-pdb-procedures`.
+  Once Phase 1 is complete, the root branch can be proposed for integration
+  into `main`.
+- The current issue #3 branch, `feat/3-c-plugin-registration-poc`, is a child
+  of the Phase 1 root branch.
