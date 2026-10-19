@@ -1,20 +1,21 @@
 ---
 title: "Issue 3: C Plug-in Registration POC"
 document_type: investigation-plan
-version: "0.3.0"
-status: approved for poc
+version: "0.6.0"
+status: draft pending review
 created: 2026-10-18
-updated: 2026-10-18
+updated: 2026-10-19
 issue: https://github.com/DoctorU/online-gimp-pdb-browser/issues/3
 parent_plan: ../documentation/plan/phase1.md
 ---
 
 # Issue 3: C Plug-in Registration POC
 
-> **Status: Approved for POC.** This is a bounded feasibility experiment
-> under Phase 1, which remains in development. The POC does not implement the
-> production catalog extractor or authorize publishing sample records as
-> complete coverage.
+> **Status: Draft, pending review (version 0.6.0).** Version 0.4.0 was
+> approved for the POC. Later revisions propose clarifications and link the
+> exploratory findings; they do not replace the approved baseline until
+> reviewed. The POC does not implement the production catalog extractor or
+> authorize publishing sample records as complete coverage.
 
 ## Purpose
 
@@ -76,7 +77,8 @@ observation demonstrates the latter. Keep both evidence types distinct.
 
 This source-level investigation is part of the POC: the current inspection of
 upstream `master` is useful orientation, but it does not establish feasibility
-for the pinned stable release.
+for the pinned stable release. The initial pinned-release trace and its
+limitations are recorded in the [exploratory outcomes](./phase3_1_outcomes.md#2026-10-19--source-pin-and-initial-source-review).
 
 ### 2. Establish the runtime baseline and decide whether a source build is needed
 
@@ -119,13 +121,19 @@ If dependencies are unavailable or build cost is unreasonable, record the
 exact blocker rather than silently downgrading the required evidence. A
 configured-out or unloadable example is unavailable for the runtime baseline,
 not a successful capture and not evidence that its source has no registration.
+The [outcomes log's local-environment notes](./phase3_1_outcomes.md#local-execution-environment)
+record which tools and GIMP development dependencies are available in this
+workspace; they do not establish what is available in the user's Flatpak.
 
 ### 3. Test the narrowest viable collection boundary
 
 Use the source assessment to pick one example and begin at the narrowest
 boundary that retains the real procedure-construction callbacks. Do not begin
 by replacing a large part of GIMP or assuming that substituting `libgimp` is
-sufficient.
+sufficient. The initial source trace distinguishes the plug-in callback,
+wire-protocol, and host-registration paths; see the
+[registration and startup findings](./phase3_1_outcomes.md#2026-10-19--registration-interception-and-startup-behavior),
+including the open questions about a host-independent shim.
 
 1. First test whether the compiled plug-in can be run in its normal query mode
    or whether its actual callback path can be invoked with GIMP's real
@@ -136,17 +144,25 @@ sufficient.
    metadata; it must not claim that the procedure was registered with the
    main GIMP PDB unless the host's registration step also ran.
 3. If direct invocation is not viable, inspect and test the actual plug-in
-   protocol boundary. Consider a small host-side observer or running the
-   normal GIMP host. Any stub, wrapper, or interposition must preserve the
-   callback and procedure-construction behavior, and its limits must be
-   recorded.
+   protocol boundary. A protocol collector must handle `GP_PROC_INSTALL` and
+   the subsequent `GP_PROC_RUN` metadata calls, returning `GP_PROC_RETURN`
+   responses where the plug-in waits for them. Consider a small host-side
+   observer or running the normal GIMP host. Any stub, wrapper, or
+   interposition must preserve the callback and procedure-construction
+   behavior, and its limits must be recorded. The exploratory log explains
+   these message roles and the untested shim alternative
+   ([protocol and shim findings](./phase3_1_outcomes.md#2026-10-19--registration-interception-and-startup-behavior)).
 4. Only after one example works, repeat the approach with the other example.
    Verify build dependencies (including optional ones) rather than assuming
    either plug-in is simpler.
 5. Do not use `gimp_pdb_register_procedure()` interception as evidence for
    these plug-ins unless the pinned source trace proves that it is on their
-   registration path. Do not use source-text parsing as a substitute for
-   executing the procedure-construction code.
+   registration path. The source trace shows the host manager does call it
+   for plug-in procedures after handling installation; see the
+   [host-registration findings](./phase3_1_outcomes.md#2026-10-19--registration-interception-and-startup-behavior)
+   for what such interception demonstrates and what it does not. Do not use
+   source-text parsing as a substitute for executing the
+   procedure-construction code.
 
 If producing a reduced executable requires effectively rebuilding or
 mocking most of GIMP's host/runtime, stop and document that finding instead of
@@ -160,7 +176,10 @@ with using the normal headless GIMP host.
   available.
 - Compare callback-harness and live-host output for the same source revision
   and plug-in configuration. Account for metadata normalized or supplied by
-  the host and control locale where practical.
+  the host and control locale where practical. The outcomes log distinguishes
+  callback-produced metadata from host PDB registration and describes the
+  runtime-dependent registration considerations
+  ([registration and startup findings](./phase3_1_outcomes.md#2026-10-19--registration-interception-and-startup-behavior)).
 - Preserve provenance for source revision, build options, example plug-in,
   and capture method.
 - Add focused tests for serialization and a repeatable smoke command that
@@ -174,7 +193,9 @@ with using the normal headless GIMP host.
 ## Decision gates
 
 Proceed to a build or reduced harness only after the pinned-source assessment
-explains why it is needed and identifies the boundary to test. Proceed to the
+explains why it is needed and identifies the boundary to test. The initial
+assessment and its unresolved questions are summarized in the
+[exploratory outcomes](./phase3_1_outcomes.md#preliminary-assessment). Proceed to the
 second example only when the first demonstrates a repeatable, correctly
 labelled capture.
 
@@ -218,6 +239,7 @@ proof that the collector executed it.
 ## Related references
 
 - [Issue #3: POC — extract plug-in C procedures](https://github.com/DoctorU/online-gimp-pdb-browser/issues/3)
+- [Issue 3 POC outcomes log](./phase3_1_outcomes.md)
 - [Phase 1 outcome baseline](../documentation/plan/phase1.md)
 - [Live PDB metadata-export POC](../documentation/procedure-extraction-poc.md)
 - [Project work tracker](../TODO.md)
@@ -228,3 +250,6 @@ proof that the collector executed it.
 |---------|------------|---------|--------|
 | 0.2.0   | 2026-10-18 | Added a pinned-source feasibility gate, distinguished plug-in callback metadata from host registration, made source builds conditional, and documented the GitHub mirror and future Ubuntu-runner option | Address the GIMP lifecycle and build-model uncertainties before starting an expensive build or collector implementation. |
 | 0.3.0   | 2026-10-18 | Approved the plan for the full POC and clarified that source review is the first step, not the limit of the work | Authorize the bounded investigation and capture experiment while keeping source builds conditional on need. |
+| 0.4.0   | 2026-10-19 | Added the linked outcomes log and its initial pinned-source findings | Keep evidence, open questions, and later experiment results alongside the execution plan. |
+| 0.5.0   | 2026-10-19 | Proposed clarifying metadata PDB calls after `GP_PROC_INSTALL`; marked this revision draft pending review | The pinned source shows procedure install sends additional metadata calls and waits for host replies; review is needed before it supersedes approved version 0.4.0. |
+| 0.6.0   | 2026-10-19 | Added links from the execution and validation steps to relevant exploratory findings; retained draft-pending-review status | Make the existing evidence easy to consult at the decisions it informs without treating the findings as completed runtime validation. |
